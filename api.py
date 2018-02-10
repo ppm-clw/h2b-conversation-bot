@@ -7,37 +7,8 @@ app = Flask(__name__)
 #日本語文字化け対応
 app.config['JSON_AS_ASCII'] = False
 
-# root
-# HelloWorld
-@app.route('/', methods=['GET'])
-def index():
-    return 'Hello World'
-
-# GET通信
-# 固定のJSONファイルを返却するケース
-@app.route('/h2b/test', methods=['GET'])
-def get_test_controller():
-    # get request data form dialogflow post body
-    req = request.get_json(silent=True, force=True)
-    # log
-    print("Request:")
-    print(json.dumps(req, indent=4))
-    # read response json file (test)
-    res = read_model()
-    # make response json and return
-    return make_webfook_result(res)
-
-# 固定のJSONファイル読み込み
-def read_model():
-    try:
-        with open('response.json', 'r') as f:
-            return json.load(f)
-    except IOError as e:
-        print(e)
-        return None
-
-# GET通信
-# 会話テスト（A3RT使用）
+# POST通信
+# 会話ロジック（A3RTを使用）
 @app.route('/h2b/conv/test', methods=['POST'])
 def get_test_a3rt():
     # DialogFlowからの受信時のBody
@@ -71,7 +42,7 @@ def get_test_a3rt():
     # POST送信
     with urllib.request.urlopen(req) as res:
         res_json = res.read().decode('utf-8')
-        print(res_json)
+        #print(res_json)
     # JOSN形式のデコード（※これしないと文字化けます）
     res_json = json.loads(res_json)
     # 返答文言をJSONから取得する
@@ -92,19 +63,14 @@ def make_json_param():
     p = {"apikey": api_key}
     return p
 
-# 会話文の作成
-def make_speech_sentence(item_name):
-    return "現在のランキング一番の商品は、" + item_name + " です。"
-
-# 回答用のJSON作成
+# DialogFlow回答用のJSON作成
 def create_res_json(speech, name):
     d = {"speech": speech,"displayText": name,"source": "dialogflow-h2b"}
     return d
 
-# DialogFlowへの返却
+# DialogFlowへの返却JSON
 def make_webfook_result(data):
     return jsonify(data)
-
 
 # Main
 if __name__ == '__main__':
